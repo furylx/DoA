@@ -201,12 +201,16 @@ class App(customtkinter.CTk):
     def ping_devices(self):
         if self.btn_start_stop.cget('text') == 'Start':
             self.btn_start_stop.configure(text='Stop')
+            self.btn_add_device.configure(state='disabled')
+            self.btn_remove_device.configure(state='disabled')
             self.stop_ping.clear()
             self.configure(bg='#d2f3e4')
             self.ping_thread = threading.Thread(target=self.ping_loop)
             self.ping_thread.start()
         else:
             self.btn_start_stop.configure(text='Start')
+            self.btn_add_device.configure(state='normal')
+            self.btn_remove_device.configure(state='normal')
             self.configure(bg='pale violet red')
             self.stop_ping_loop()
 
