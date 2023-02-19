@@ -15,8 +15,8 @@ class PingFrame(customtkinter.CTkFrame):
 
         # Creating Labels
         self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=8, height=40, width=50, font=('bold', 16))
-        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='purple', width=100, font=('bold', 16))
-        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='purple', width=100, font=('bold', 16))
+        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='purple', corner_radius=8, height=40, width=150, font=('bold', 16))
+        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='purple', corner_radius=8, height=40, width=150, font=('bold', 16))
 
         # Add widgets to frame
         self.lbl_doa.grid(column=0, row=0, padx=5, pady=5)
@@ -96,12 +96,56 @@ class TopLevel(customtkinter.CTkToplevel):
             frame = PingFrame(self.parent, device_name, ip_address)
             self.parent.frames[device_name] = frame
             frame.configure(fg_color='transparent')
-            frame.grid(column=0, sticky='nsew')
+            frame.grid(row=len(self.parent.frames)-1, column=0, sticky='nsew')
             self.update_idletasks()
 
             self.destroy()
 
+class TopLevelRemove(customtkinter.CTkToplevel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.geometry('300x130')
+        self.minsize(300, 130)
+        self.title('Remove')
+        self.resizable(width=False, height=False)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        with open('devices.json', 'r') as device_list:
+            self.devices = json.load(device_list)
+        self.devices_list = [self.device for self.device in self.devices.keys()]
+        self.combobox_var = customtkinter.StringVar(value=None)  # set initial value
+        self.combobox = customtkinter.CTkComboBox(self, values=self.devices_list, variable=self.combobox_var)
+        self.combobox.grid(padx=5, pady=5, sticky='ew')
+        self.btn_remove = customtkinter.CTkButton(self, text='Remove', width=50, height=20, command=self.remove_device)
+        self.btn_remove.grid(padx=5, pady=20)
 
+    def debug(self):
+        print(self.combobox_var.get())
+
+    def remove_device(self):
+        # Get the selected device from the combobox
+        selected_device = self.combobox_var.get()
+
+        # Remove the device from the devices list and write the updated list to the json file
+        with open('devices.json', 'r+') as device_list:
+            self.devices = json.load(device_list)
+            for device in self.devices:
+                if device == selected_device:
+                    self.devices.pop(device)
+                    break
+            device_list.seek(0)
+            json.dump(self.devices, device_list, indent=4)
+            device_list.truncate()
+        self.update_idletasks()
+        # Remove the device from the UI
+        try:
+            if selected_device in self.parent.frames:
+                self.parent.frames[selected_device].destroy()
+                self.parent.frames.pop(selected_device)
+        finally:
+            self.update_idletasks()
+            self.destroy()
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -109,8 +153,10 @@ class App(customtkinter.CTk):
         #self.geometry("450x400")
         self.title("Dead or Alive")
         self.configure(fg_color='pale violet red')
-        self.minsize(width=380,height=400)
-        self.resizable(width=False, height=True)
+        #self.minsize(width=380,height=400)
+        self.resizable(width=False, height=False)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
 
         with open('devices.json', 'r') as device_list:
@@ -121,31 +167,37 @@ class App(customtkinter.CTk):
             frame = PingFrame(self, device_name, ipaddress)
             self.frames[device_name] = frame
             frame.configure(fg_color='transparent')
-            frame.grid(column=0, sticky='ew')
+            frame.grid(column=0, sticky='nsew')
             self.update_idletasks()
 
 
         # add widgets
-        self.btn_start_stop = customtkinter.CTkButton(self, text="Start", font=('bold', 16), command=self.ping_devices)
+        self.btn_start_stop = customtkinter.CTkButton(self, text="Start", height=40, font=('bold', 16), command=self.ping_devices)
         self.btn_start_stop.grid(pady=5, padx=5, sticky='ew', column=1, row=0)
 
-        self.btn_add_device = customtkinter.CTkButton(self, text='Add Device', font=('bold', 16), command=self.open_toplevel)
+        self.btn_add_device = customtkinter.CTkButton(self, text='Add Device', height=40, font=('bold', 16), command=self.open_toplevel)
         self.btn_add_device.grid(pady=5, padx=5, sticky='ew', column=1, row=1)
-        self.btn_remove_device = customtkinter.CTkButton(self, text='Remove Device',font=('bold', 16), command=self.remove_device)
+        self.btn_remove_device = customtkinter.CTkButton(self, text='Remove Device', height=40, font=('bold', 16), command=self.open_toplevel_remove)
         self.btn_remove_device.grid(pady=5, padx=5, sticky='ew', column=1, row=2)
 
         self.stop_ping = threading.Event()
 
         self.top_level_window = None
+        self.top_level_window_remove = None
 
+
+    # add methods to app
     def open_toplevel(self):
         if self.top_level_window is None or not self.top_level_window.winfo_exists():
             self.top_level_window = TopLevel(self)  # create window if its None or destroyed
         else:
             self.top_level_window.focus()  # if window exists focus it
+    def open_toplevel_remove(self):
+        if self.top_level_window_remove is None or not self.top_level_window_remove.winfo_exists():
+            self.top_level_window_remove = TopLevelRemove(self)  # create window if its None or destroyed
+        else:
+            self.top_level_window_remove.focus()  # if window exists focus it
 
-
-    # add methods to app
     def ping_devices(self):
         if self.btn_start_stop.cget('text') == 'Start':
             self.btn_start_stop.configure(text='Stop')
@@ -168,9 +220,6 @@ class App(customtkinter.CTk):
     def stop_ping_loop(self):
         self.stop_ping.set()
         self.ping_thread.join()
-
-    def remove_device(self, device_name):
-        remove_device_from_json_file(device_name)
 
 
 if __name__ == '__main__':
