@@ -14,12 +14,11 @@ class PingFrame(customtkinter.CTkFrame):
         self.ip = ip_address
 
 
-        # Creating Labels
         self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=8, height=40, width=50, font=('bold', 16))
         self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='#525252', corner_radius=8, height=40, width=150, font=('bold', 16))
         self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='#525252', corner_radius=8, height=40, width=150, font=('bold', 16))
 
-        # Add widgets to frame
+
         self.lbl_doa.grid(column=0, row=0, padx=5, pady=5)
         self.lbl_name.grid(column=1, row=0, padx=10, pady=10)
         self.lbl_ip.grid(column=2, row=0, padx=10, pady=10)
@@ -181,7 +180,6 @@ class App(customtkinter.CTk):
             self.update_idletasks()
 
 
-        # add widgets
         self.btn_start_stop = customtkinter.CTkButton(self, text="Start", height=40, font=('bold', 16), command=self.ping_devices)
         self.btn_start_stop.grid(pady=5, padx=5, sticky='ew', column=1, row=0)
 
@@ -196,17 +194,16 @@ class App(customtkinter.CTk):
         self.top_level_window_remove = None
 
 
-    # add methods to app
     def open_toplevel(self):
         if self.top_level_window is None or not self.top_level_window.winfo_exists():
-            self.top_level_window = TopLevel(self)  # create window if its None or destroyed
+            self.top_level_window = TopLevel(self)  # create window if None or destroyed
         else:
-            self.top_level_window.focus()  # if window exists focus it
+            self.top_level_window.focus()
     def open_toplevel_remove(self):
         if self.top_level_window_remove is None or not self.top_level_window_remove.winfo_exists():
-            self.top_level_window_remove = TopLevelRemove(self)  # create window if its None or destroyed
+            self.top_level_window_remove = TopLevelRemove(self)
         else:
-            self.top_level_window_remove.focus()  # if window exists focus it
+            self.top_level_window_remove.focus()
 
     def ping_devices(self):
         if self.btn_start_stop.cget('text') == 'Start':
