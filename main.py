@@ -14,9 +14,9 @@ class PingFrame(customtkinter.CTkFrame):
         self.ip = ip_address
 
 
-        self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=8, height=40, width=50, font=('bold', 16))
-        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='#525252', corner_radius=8, height=40, width=150, font=('bold', 16))
-        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='#525252', corner_radius=8, height=40, width=150, font=('bold', 16))
+        self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=5, height=40, width=50, font=('bold', 16))
+        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='#525252', corner_radius=5, height=40, width=150, font=('bold', 16))
+        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='#525252', corner_radius=5, height=40, width=150, font=('bold', 16))
 
 
         self.lbl_doa.grid(column=0, row=0, padx=5, pady=5)
