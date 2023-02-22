@@ -196,7 +196,7 @@ class App(customtkinter.CTk):
 
     def open_toplevel(self):
         if self.top_level_window is None or not self.top_level_window.winfo_exists():
-            self.top_level_window = TopLevel(self)  # create window if None or destroyed
+            self.top_level_window = TopLevel(self)
         else:
             self.top_level_window.focus()
     def open_toplevel_remove(self):
