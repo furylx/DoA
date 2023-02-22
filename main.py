@@ -4,6 +4,7 @@ from tkinter import messagebox
 import ipaddress
 import customtkinter
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 
 class PingFrame(customtkinter.CTkFrame):
@@ -15,8 +16,8 @@ class PingFrame(customtkinter.CTkFrame):
 
         # Creating Labels
         self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=8, height=40, width=50, font=('bold', 16))
-        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='purple', corner_radius=8, height=40, width=150, font=('bold', 16))
-        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='purple', corner_radius=8, height=40, width=150, font=('bold', 16))
+        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='#525252', corner_radius=8, height=40, width=150, font=('bold', 16))
+        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='#525252', corner_radius=8, height=40, width=150, font=('bold', 16))
 
         # Add widgets to frame
         self.lbl_doa.grid(column=0, row=0, padx=5, pady=5)
@@ -24,18 +25,26 @@ class PingFrame(customtkinter.CTkFrame):
         self.lbl_ip.grid(column=2, row=0, padx=10, pady=10)
 
 class PingThread(threading.Thread):
-    def __init__(self, device_name, ip_address, frame):
+    def __init__(self, executor, device_name, ip_address, frame):
         threading.Thread.__init__(self)
         self.device_name = device_name
         self.ipaddress = ip_address
         self.frame = frame
+        self.executor = executor
 
     def run(self):
+        future = self.executor.submit(self.ping)
+        future.add_done_callback(self.done_callback)
+
+    def ping(self):
         result = subprocess.run(['ping', '-c', '1', '-t', '5', self.ipaddress], stdout=subprocess.DEVNULL)
-        if result.returncode == 0:
-            self.frame.lbl_doa.configure(text="ALIVE", fg_color="green", corner_radius=8)
+        return result.returncode == 0
+
+    def done_callback(self, future):
+        if future.result():
+            self.frame.lbl_doa.configure(text="ALIVE", fg_color="green")
         else:
-            self.frame.lbl_doa.configure(text="DEAD", fg_color="red", corner_radius=8)
+            self.frame.lbl_doa.configure(text="DEAD", fg_color="red")
 
 
 class TopLevel(customtkinter.CTkToplevel):
@@ -46,6 +55,7 @@ class TopLevel(customtkinter.CTkToplevel):
         self.minsize(300, 130)
         self.title('Add new device')
         self.resizable(width=False, height=False)
+        self.executor = ThreadPoolExecutor(max_workers=10)
 
         device_id_lbl = customtkinter.CTkLabel(self, text='New device name')
         device_id_lbl.grid(column=0, row=0, padx=5, pady=5)
@@ -92,13 +102,12 @@ class TopLevel(customtkinter.CTkToplevel):
             with open('devices.json', 'w') as f:
                 json.dump(devices, f, indent=4)
 
-            self.parent.devices = devices
             frame = PingFrame(self.parent, device_name, ip_address)
             self.parent.frames[device_name] = frame
             frame.configure(fg_color='transparent')
-            frame.grid(row=len(self.parent.frames)-1, column=0, sticky='nsew')
-            self.update_idletasks()
-
+            frame.grid(row=len(self.parent.frames) - 1, column=0, sticky='nsew')
+            ping_thread = PingThread(self.executor, device_name, ip_address, frame)
+            ping_thread.start()
             self.destroy()
 
 class TopLevelRemove(customtkinter.CTkToplevel):
@@ -157,6 +166,7 @@ class App(customtkinter.CTk):
         self.resizable(width=False, height=False)
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        self.executor = ThreadPoolExecutor(max_workers=10)
 
 
         with open('devices.json', 'r') as device_list:
@@ -204,7 +214,7 @@ class App(customtkinter.CTk):
             self.btn_add_device.configure(state='disabled')
             self.btn_remove_device.configure(state='disabled')
             self.stop_ping.clear()
-            self.configure(bg='#d2f3e4')
+            self.configure(bg='grey')
             self.ping_thread = threading.Thread(target=self.ping_loop)
             self.ping_thread.start()
         else:
@@ -217,7 +227,7 @@ class App(customtkinter.CTk):
     def ping_loop(self):
         while not self.stop_ping.is_set():
             for device_name, ipaddress in self.devices.items():
-                t = PingThread(device_name, ipaddress, self.frames[device_name])
+                t = PingThread(self.executor, device_name, ipaddress, self.frames[device_name])
                 t.start()
             self.stop_ping.wait(5)
 
