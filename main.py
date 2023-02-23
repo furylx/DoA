@@ -116,7 +116,7 @@ class TopLevelRemove(customtkinter.CTkToplevel):
         self.geometry('300x130')
         self.minsize(300, 130)
         self.title('Remove')
-        self.resizable(width=True, height=True)
+        self.resizable(width=False, height=False)
         #self.grid_rowconfigure(0, weight=1)
         #self.grid_columnconfigure(0, weight=1)
         with open('devices.json', 'r') as device_list:
@@ -162,7 +162,7 @@ class App(customtkinter.CTk):
         self.title("Dead or Alive")
         self.configure(fg_color='pale violet red')
         #self.minsize(width=380,height=400)
-        self.resizable(width=False, height=False)
+        self.resizable(width=True, height=True)
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.executor = ThreadPoolExecutor(max_workers=10)
