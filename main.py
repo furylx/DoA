@@ -14,14 +14,14 @@ class PingFrame(customtkinter.CTkFrame):
         self.ip = ip_address
 
 
-        self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=6, height=40, width=50, font=('bold', 16))
-        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='#525252', corner_radius=6, height=40, width=150, font=('bold', 16))
-        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='#525252', corner_radius=6, height=40, width=150, font=('bold', 16))
+        self.lbl_doa = customtkinter.CTkLabel(self, fg_color='red', text='DEAD', corner_radius=6, height=30, width=50, font=('bold', 16))
+        self.lbl_name = customtkinter.CTkLabel(self, text=self.name, fg_color='#5c5c5c', corner_radius=6, height=30, width=150, font=('bold', 16))
+        self.lbl_ip = customtkinter.CTkLabel(self, text=self.ip, fg_color='#5c5c5c', corner_radius=6, height=30, width=150, font=('bold', 16))
 
 
         self.lbl_doa.grid(column=0, row=0, padx=5, pady=5)
-        self.lbl_name.grid(column=1, row=0, padx=10, pady=10)
-        self.lbl_ip.grid(column=2, row=0, padx=10, pady=10)
+        self.lbl_name.grid(column=1, row=0, padx=5, pady=5)
+        self.lbl_ip.grid(column=2, row=0, padx=5, pady=5)
 
 class PingThread(threading.Thread):
     def __init__(self, executor, device_name, ip_address, frame):
@@ -106,7 +106,7 @@ class TopLevel(customtkinter.CTkToplevel):
             frame.configure(fg_color='transparent')
             frame.grid(row=len(self.parent.frames) - 1, column=0, sticky='nsew')
             ping_thread = PingThread(self.executor, device_name, ip_address, frame)
-            ping_thread.start()
+            #ping_thread.start()
             self.destroy()
 
 class TopLevelRemove(customtkinter.CTkToplevel):
@@ -116,9 +116,9 @@ class TopLevelRemove(customtkinter.CTkToplevel):
         self.geometry('300x130')
         self.minsize(300, 130)
         self.title('Remove')
-        self.resizable(width=False, height=False)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
+        self.resizable(width=True, height=True)
+        #self.grid_rowconfigure(0, weight=1)
+        #self.grid_columnconfigure(0, weight=1)
         with open('devices.json', 'r') as device_list:
             self.devices = json.load(device_list)
         self.devices_list = [self.device for self.device in self.devices.keys()]
@@ -180,12 +180,12 @@ class App(customtkinter.CTk):
             self.update_idletasks()
 
 
-        self.btn_start_stop = customtkinter.CTkButton(self, text="Start", height=40, font=('bold', 16), command=self.ping_devices)
+        self.btn_start_stop = customtkinter.CTkButton(self, text="Start", height=30, font=('bold', 16), command=self.ping_devices)
         self.btn_start_stop.grid(pady=5, padx=5, sticky='ew', column=1, row=0)
 
-        self.btn_add_device = customtkinter.CTkButton(self, text='Add Device', height=40, font=('bold', 16), command=self.open_toplevel)
+        self.btn_add_device = customtkinter.CTkButton(self, text='Add Device', height=30, font=('bold', 16), command=self.open_toplevel)
         self.btn_add_device.grid(pady=5, padx=5, sticky='ew', column=1, row=1)
-        self.btn_remove_device = customtkinter.CTkButton(self, text='Remove Device', height=40, font=('bold', 16), command=self.open_toplevel_remove)
+        self.btn_remove_device = customtkinter.CTkButton(self, text='Remove Device', height=30, font=('bold', 16), command=self.open_toplevel_remove)
         self.btn_remove_device.grid(pady=5, padx=5, sticky='ew', column=1, row=2)
 
         self.stop_ping = threading.Event()
@@ -211,14 +211,14 @@ class App(customtkinter.CTk):
             self.btn_add_device.configure(state='disabled')
             self.btn_remove_device.configure(state='disabled')
             self.stop_ping.clear()
-            self.configure(bg='grey')
+            self.configure(fg_color='grey') # in pycharm fg_color throws an error, with IDLE not. for pycharm use bg (weird because in init it works)
             self.ping_thread = threading.Thread(target=self.ping_loop)
             self.ping_thread.start()
         else:
             self.btn_start_stop.configure(text='Start')
             self.btn_add_device.configure(state='normal')
             self.btn_remove_device.configure(state='normal')
-            self.configure(bg='pale violet red')
+            self.configure(fg_color='pale violet red') # in pycharm fg_color throws an error, with IDLE not. for pycharm use bg (weird because in init it works)
             self.stop_ping_loop()
 
     def ping_loop(self):
